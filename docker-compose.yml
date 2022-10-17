@@ -1,0 +1,28 @@
+version: "3.8"
+services:
+  server:
+    build: .
+    restart: always
+    ports:
+      - 8080:8080
+    depends_on:
+      - database
+      - mail-server
+  mysql-db:
+    platform: linux/x86_64
+    image: "mysql:8.0"
+    restart: always
+    ports:
+      - 3306:3306
+    environment:
+      MYSQL_DATABASE: roomy-db
+      MYSQL_USER: db-admin
+      MYSQL_PASSWORD: dbpasswd
+      MYSQL_ROOT_PASSWORD: supersecret
+  mail-server:
+    platform: linux/x86_64
+    image: "maildev/maildev"
+    restart: always
+    ports:
+      - 1080:1080
+      - 1025:1025
