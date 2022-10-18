@@ -3,7 +3,11 @@ package dev.willi.roomy.controller;
 import java.time.LocalDate;
 import java.util.List;
 
+import javax.naming.NoPermissionException;
+
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -38,19 +42,52 @@ public class BookingController {
 	}
 	
 	@PostMapping
-	public String createBooking(@RequestBody Booking booking) {
-		return bookingService.createBooking(booking);
+	public String createBooking(@RequestBody Booking booking) throws NoPermissionException {
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+		String currentPrincipalName = authentication.getName();
+		
+		Boolean isAdmin = authentication != null && authentication.getAuthorities()
+			.stream()
+			.anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+		
+		if (booking.getUser().getEmail() != currentPrincipalName || !isAdmin) {
+			throw new NoPermissionException("You do not have permission to make a booking for this user!");
+		} else {
+			return bookingService.createBooking(booking);
+		}
 	}
 	
 	@PutMapping
-	public String updateBooking(@RequestBody Booking booking) {
-		return bookingService.updateBooking(booking);
+	public String updateBooking(@RequestBody Booking booking) throws NoPermissionException {
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+		String currentPrincipalName = authentication.getName();
+		
+		Boolean isAdmin = authentication != null && authentication.getAuthorities()
+			.stream()
+			.anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+		
+		if (booking.getUser().getEmail() != currentPrincipalName || !isAdmin) {
+			throw new NoPermissionException("You do not have permission to change a booking for this user!");
+		} else {
+			return bookingService.updateBooking(booking);
+		}
 	}
 	
 	@DeleteMapping("/{user}/{date}")
 	public String deleteBooking(@PathVariable User user, 
-								@PathVariable @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date) {
-		return bookingService.deleteBooking(user, date);
+								@PathVariable @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date) throws NoPermissionException {
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+		String currentPrincipalName = authentication.getName();
+		
+		Boolean isAdmin = authentication != null && authentication.getAuthorities()
+			.stream()
+			.anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+		
+		if (user.getEmail() != currentPrincipalName || !isAdmin) {
+			throw new NoPermissionException("You do not have permission to change a booking for this user!");
+		} else {
+			return bookingService.deleteBooking(user, date);
+		}
 	}
 
 }

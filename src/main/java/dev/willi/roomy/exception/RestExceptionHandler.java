@@ -1,5 +1,6 @@
 package dev.willi.roomy.exception;
 
+import javax.naming.NoPermissionException;
 import javax.persistence.EntityNotFoundException;
 
 import org.springframework.http.HttpStatus;
@@ -42,6 +43,17 @@ public class RestExceptionHandler {
         error.setTimeStamp(System.currentTimeMillis());
         
         return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+    
+    @ExceptionHandler
+    public ResponseEntity<ErrorResponse> handleException(NoPermissionException exc){
+        ErrorResponse error = new ErrorResponse();
+        
+        error.setStatus(HttpStatus.FORBIDDEN.value());
+        error.setMessage(exc.getMessage());
+        error.setTimeStamp(System.currentTimeMillis());
+        
+        return new ResponseEntity<>(error, HttpStatus.FORBIDDEN);
     }
     
     @ExceptionHandler
